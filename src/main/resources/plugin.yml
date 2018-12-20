@@ -1,0 +1,9 @@
+name: DiscordBot
+version: ${project.version}
+main: discordbot.discordbot.DiscordBot
+authors: [asd]
+description: asd
+commands:
+  dverify:
+    description: verify player through discord
+    usage: /verify <code>
