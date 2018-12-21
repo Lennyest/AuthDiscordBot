@@ -24,9 +24,7 @@ public class Events extends ListenerAdapter implements CommandExecutor, Listener
     private HashMap<UUID, String> uuidCode = new HashMap<>();
     private HashMap<UUID, String> discordMemberID = new HashMap<>();
     private List<UUID> verifiedMembers = new ArrayList<>();
-
-    private Guild guild = DiscordBot.getPlugin().getJda().getGuilds().get(0);
-
+    public Guild guild;
 
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
@@ -53,24 +51,15 @@ public class Events extends ListenerAdapter implements CommandExecutor, Listener
             }
 
             uuidCode.put(target.getUniqueId(), randomCode);
+            uuidCode.put(target.getUniqueId(), randomCode);
             discordMemberID.put(target.getUniqueId(), event.getAuthor().getId());
-
-            //Embed Message for making it more fancy!
-
-            EmbedBuilder embedBuilder = new EmbedBuilder();
-            embedBuilder.setTitle("Verification Code", null);
-            embedBuilder.setColor(Color.RED);
-            embedBuilder.setDescription("Hello! Here is your verification code: " + randomCode);
-            embedBuilder.addField("Test Field", "test field", false);
-            embedBuilder.setAuthor("name", null, null);
-
-            event.getAuthor().openPrivateChannel().complete().sendMessage(embedBuilder.build()).queue();
+            event.getAuthor().openPrivateChannel().complete().sendMessage("**!** Here is your code: " + randomCode).queue();
+            event.getAuthor().openPrivateChannel().complete().sendMessage(uuidCode.get(target.getUniqueId())).queue();
 
 
         }
     }
 
-    //Remove if it double sends.
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         if (DiscordBot.getPlugin().playerData.contains("Data." + event.getPlayer().getUniqueId().toString())) {
@@ -80,18 +69,25 @@ public class Events extends ListenerAdapter implements CommandExecutor, Listener
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+
+
+       Bukkit.getScheduler().runTaskLater(DiscordBot.getPlugin(), ()-> guild = DiscordBot.getJda().getGuilds().get(0), 100L);
+
+
         if (!(sender instanceof Player)) {
             sender.sendMessage(ChatColor.RED + "Only players can use this command.");
             return true;
         }
 
-        if (command.getName().equalsIgnoreCase("dverify")) {
+        if (command.getName().equalsIgnoreCase("verify")) {
 
             Player player = (Player) sender;
             if (args.length != 1) {
-                player.sendMessage(ChatColor.RED + "Wrong usage, /verify <code>");
+                player.sendMessage(ChatColor.RED + "Wrong usage, /dverify <code>");
                 return true;
             }
+
+
             if (!uuidCode.containsKey(player.getUniqueId())) {
                 player.sendMessage(ChatColor.RED + "You do not have a verification code, please see the #verify channel on discord.");
                 return true;
@@ -104,10 +100,11 @@ public class Events extends ListenerAdapter implements CommandExecutor, Listener
 
             String actualCode = uuidCode.get(player.getUniqueId());
 
-            if (!(actualCode.equalsIgnoreCase(args[0]))) {
+            if (!actualCode.equalsIgnoreCase(args[0])) {
                 player.sendMessage(ChatColor.RED + "Wrong code, please try again.");
                 return true;
             }
+
             String discordID = discordMemberID.get(player.getUniqueId());
             Member target = guild.getMemberById(discordID);
             if (target == null) {
@@ -117,7 +114,10 @@ public class Events extends ListenerAdapter implements CommandExecutor, Listener
                 return true;
             }
 
-            DiscordBot.getPlugin().playerData.set("Data." + player.getUniqueId(), discordID);
+            if (DiscordBot.getPlugin().playerData != null ) {
+                DiscordBot.getPlugin().playerData.set("Data." + player.getUniqueId(), discordID);
+            }
+
             try {
                 DiscordBot.getPlugin().playerData.save(DiscordBot.getPlugin().data);
             } catch (IOException e) {

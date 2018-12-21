@@ -20,12 +20,12 @@ import java.io.IOException;
 
 public class DiscordBot extends JavaPlugin {
 
-    public JDA jda;
+    public static JDA jda;
     static DiscordBot plugin;
 
     FileConfiguration playerData;
     File data;
-    private final String TOKEN = "NTE5MzM5MzQwNzk5OTM0NDY0.Duk5Hg.TVLoSHaICPelDwp26V0bP8sfKhc";
+    private final String TOKEN = "NTE5MzM5MzQwNzk5OTM0NDY0.Dv2h_Q.qTC0_Erp_JDlRy9epbRxBTyyRSc";
 
     public DiscordBot() {
         plugin = this;
@@ -35,30 +35,25 @@ public class DiscordBot extends JavaPlugin {
         return plugin;
     }
 
-    public JDA getJda() {
+    public static JDA getJda() {
         return jda;
     }
-
 
     @Override
     public void onEnable() {
         createConfig();
         startBot();
-        getCommand("dverify").setExecutor(new Events());
+        getCommand("verify").setExecutor(new Events());
         getServer().getPluginManager().registerEvents(new Events(), this);
         jda.addEventListener(new Events());
     }
 
     private void startBot() {
-
         try {
-
             jda = new JDABuilder(AccountType.BOT).setToken(TOKEN).build();
-            jda.getPresence().setGame(Game.watching("Lanthyr Discord"));
         } catch (LoginException e) {
             e.printStackTrace();
         }
-
     }
 
     private void createConfig() {

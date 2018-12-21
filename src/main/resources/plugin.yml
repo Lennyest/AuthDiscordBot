@@ -4,6 +4,6 @@ main: discordbot.discordbot.DiscordBot
 authors: [asd]
 description: asd
 commands:
-  dverify:
+  verify:
     description: verify player through discord
     usage: /verify <code>
