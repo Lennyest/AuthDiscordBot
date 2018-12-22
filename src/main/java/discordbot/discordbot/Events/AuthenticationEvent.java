@@ -1,5 +1,6 @@
-package discordbot.discordbot;
+package discordbot.discordbot.Events;
 
+import discordbot.discordbot.DiscordBot;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
@@ -19,15 +20,18 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
-public class Events extends ListenerAdapter implements CommandExecutor, Listener {
+public class AuthenticationEvent extends ListenerAdapter implements CommandExecutor, Listener {
 
-    private HashMap<UUID, String> uuidCode = new HashMap<>();
-    private HashMap<UUID, String> discordMemberID = new HashMap<>();
-    private List<UUID> verifiedMembers = new ArrayList<>();
-    public Guild guild;
+    private static HashMap<UUID, String> uuidCode = new HashMap<>();
+    private static HashMap<UUID, String> discordMemberID = new HashMap<>();
+    private static List<UUID> verifiedMembers = new ArrayList<>();
+    private static Guild guild;
+
 
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
+        Bukkit.getScheduler().runTaskLater(DiscordBot.getPlugin(), ()-> guild = DiscordBot.getJda().getGuilds().get(0), 50L);
+
         String[] args = event.getMessage().getContentRaw().split(" "); //!link args
         Player target = Bukkit.getPlayer(args[1]);
         String randomCode = new Random().nextInt(800000)+200000+"AA"; //999999AA
@@ -53,9 +57,16 @@ public class Events extends ListenerAdapter implements CommandExecutor, Listener
             uuidCode.put(target.getUniqueId(), randomCode);
             uuidCode.put(target.getUniqueId(), randomCode);
             discordMemberID.put(target.getUniqueId(), event.getAuthor().getId());
-            event.getAuthor().openPrivateChannel().complete().sendMessage("**!** Here is your code: " + randomCode).queue();
-            event.getAuthor().openPrivateChannel().complete().sendMessage(uuidCode.get(target.getUniqueId())).queue();
 
+            EmbedBuilder eb = new EmbedBuilder();
+            eb.setColor(Color.YELLOW);
+            eb.setTitle("Authentication Code");
+            eb.setDescription("Here is your code: " + randomCode);
+            eb.addBlankField(true);
+            eb.addField("How to use", "Log into and type '/discordverify <code>'", false);
+            eb.setAuthor("Lenny#5713");
+
+            event.getAuthor().openPrivateChannel().complete().sendMessage(eb.build()).queue();
 
         }
     }
@@ -71,7 +82,7 @@ public class Events extends ListenerAdapter implements CommandExecutor, Listener
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
 
-       Bukkit.getScheduler().runTaskLater(DiscordBot.getPlugin(), ()-> guild = DiscordBot.getJda().getGuilds().get(0), 100L);
+       Bukkit.getScheduler().runTaskLater(DiscordBot.getPlugin(), ()-> guild = DiscordBot.getJda().getGuilds().get(0), 50L);
 
 
         if (!(sender instanceof Player)) {
@@ -79,14 +90,13 @@ public class Events extends ListenerAdapter implements CommandExecutor, Listener
             return true;
         }
 
-        if (command.getName().equalsIgnoreCase("verify")) {
+        if (command.getName().equalsIgnoreCase("discordverify")) {
 
             Player player = (Player) sender;
             if (args.length != 1) {
-                player.sendMessage(ChatColor.RED + "Wrong usage, /dverify <code>");
+                player.sendMessage(ChatColor.RED + "Wrong usage, /discordverify <code>");
                 return true;
             }
-
 
             if (!uuidCode.containsKey(player.getUniqueId())) {
                 player.sendMessage(ChatColor.RED + "You do not have a verification code, please see the #verify channel on discord.");
@@ -104,9 +114,9 @@ public class Events extends ListenerAdapter implements CommandExecutor, Listener
                 player.sendMessage(ChatColor.RED + "Wrong code, please try again.");
                 return true;
             }
-
             String discordID = discordMemberID.get(player.getUniqueId());
             Member target = guild.getMemberById(discordID);
+
             if (target == null) {
                 player.sendMessage(ChatColor.RED + "Couldn't find player.");
                 uuidCode.remove(player.getUniqueId());
@@ -125,7 +135,6 @@ public class Events extends ListenerAdapter implements CommandExecutor, Listener
             }
 
             Role verifiedRole = guild.getRolesByName("Verified", true).get(0);
-            //Adds role to player.
             uuidCode.remove(player.getUniqueId());
             discordMemberID.remove(player.getUniqueId());
 
@@ -133,7 +142,6 @@ public class Events extends ListenerAdapter implements CommandExecutor, Listener
             target.getUser().openPrivateChannel().complete().sendMessage(":white_check_mark: You have been verified!").queue();
             guild.getController().addSingleRoleToMember(target, verifiedRole).queue();
             player.sendMessage(ChatColor.GREEN + "You have been verified, please make sure you have the 'Verified' role on discord.");
-            player.sendMessage(ChatColor.AQUA + target.getUser().getDiscriminator());
             return true;
         }
         return true;

@@ -1,11 +1,9 @@
 package discordbot.discordbot;
 
-import net.dv8tion.jda.bot.sharding.DefaultShardManager;
-import net.dv8tion.jda.bot.sharding.DefaultShardManagerBuilder;
+import discordbot.discordbot.Events.AuthenticationEvent;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.Game;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -20,12 +18,12 @@ import java.io.IOException;
 
 public class DiscordBot extends JavaPlugin {
 
-    public static JDA jda;
-    static DiscordBot plugin;
+    private static JDA jda;
+    private static DiscordBot plugin;
 
-    FileConfiguration playerData;
-    File data;
-    private final String TOKEN = "NTE5MzM5MzQwNzk5OTM0NDY0.Dv2h_Q.qTC0_Erp_JDlRy9epbRxBTyyRSc";
+    public FileConfiguration playerData;
+    public File data;
+    private final String TOKEN = "redacted";
 
     public DiscordBot() {
         plugin = this;
@@ -43,9 +41,9 @@ public class DiscordBot extends JavaPlugin {
     public void onEnable() {
         createConfig();
         startBot();
-        getCommand("verify").setExecutor(new Events());
-        getServer().getPluginManager().registerEvents(new Events(), this);
-        jda.addEventListener(new Events());
+        getCommand("discordverify").setExecutor(new AuthenticationEvent());
+        getServer().getPluginManager().registerEvents(new AuthenticationEvent(), this);
+        jda.addEventListener(new AuthenticationEvent());
     }
 
     private void startBot() {
